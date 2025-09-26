@@ -9,7 +9,7 @@ import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    UsersModule, // <- أضفته هنا
+    UsersModule, 
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'change_this_secret',

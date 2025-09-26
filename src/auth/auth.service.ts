@@ -58,7 +58,7 @@ async register(email: string, password: string, role: string = 'USER') {
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const payload = { sub: user.id, role: user.role };
-    const accessToken = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload,{ expiresIn: '3h' });
 
     return {
       accessToken,

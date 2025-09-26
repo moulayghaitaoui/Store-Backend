@@ -11,6 +11,9 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+import e from 'express';
+import { CreateProductsDto, UpdateProductsDto } from './dto/prodict.dto';
+
 
 const storage = diskStorage({
   destination: process.env.UPLOAD_PATH || './uploads',
@@ -38,16 +41,16 @@ export class ProductsController {
   @Roles('OWNER')
   @Post()
   @UseInterceptors(FileInterceptor('image', { storage }))
-  async create(@UploadedFile() file: Express.Multer.File, @Body() body: any, @Req() req: any) {
-    const imageUrl = file ? `/uploads/${file.filename}` : null;
-    return this.svc.create({ ...body, imageUrl }, req.user.userId);
+  async create(@UploadedFile() file: Express.Multer.File, @Body() body: CreateProductsDto, @Req() req: any) {
+    const imageUrl = file ? `/uploads/${file.filename}` : undefined;
+    return this.svc.create({ ...body,image: imageUrl }, req.user.userId);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('OWNER')
   @Put(':id')
   @UseInterceptors(FileInterceptor('image', { storage }))
-  async update(@Param('id') id: string, @UploadedFile() file: Express.Multer.File, @Body() body: any) {
+  async update(@Param('id') id: string, @UploadedFile() file: Express.Multer.File, @Body() body: UpdateProductsDto) {
     const data: any = { ...body };
     if (file) data.imageUrl = `/uploads/${file.filename}`;
     return this.svc.update(id, data);
