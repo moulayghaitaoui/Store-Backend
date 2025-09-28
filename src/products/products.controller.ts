@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import e from 'express';
 import { CreateProductsDto, UpdateProductsDto } from './dto/prodict.dto';
+import {ApiBearerAuth, ApiTags, ApiQuery, ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 
 const storage = diskStorage({
@@ -23,11 +24,16 @@ const storage = diskStorage({
   },
 });
 
+
+@ApiBearerAuth()  
+@ApiTags('Products') 
 @Controller('products')
 export class ProductsController {
   constructor(private svc: ProductsService) {}
 
   @Get()
+  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'sort', required: false, type: String })
   getAll(@Query('category') category?: string, @Query('sort') sort?: string) {
     return this.svc.findAll({ category, sort });
   }
@@ -40,19 +46,31 @@ export class ProductsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('OWNER')
   @Post()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CreateProductsDto })
   @UseInterceptors(FileInterceptor('image', { storage }))
-  async create(@UploadedFile() file: Express.Multer.File, @Body() body: CreateProductsDto, @Req() req: any) {
+  async create(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: CreateProductsDto,
+    @Req() req: any,
+  ) {
     const imageUrl = file ? `/uploads/${file.filename}` : undefined;
-    return this.svc.create({ ...body,image: imageUrl }, req.user.userId);
+    return this.svc.create({ ...body, image: imageUrl }, req.user.userId);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('OWNER')
   @Put(':id')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UpdateProductsDto })
   @UseInterceptors(FileInterceptor('image', { storage }))
-  async update(@Param('id') id: string, @UploadedFile() file: Express.Multer.File, @Body() body: UpdateProductsDto) {
+  async update(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: UpdateProductsDto,
+  ) {
     const data: any = { ...body };
-    if (file) data.imageUrl = `/uploads/${file.filename}`;
+    if (file) data.image = `/uploads/${file.filename}`;
     return this.svc.update(id, data);
   }
 
